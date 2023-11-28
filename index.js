@@ -1,4 +1,5 @@
 const express = require('express');
+const cors = require('cors');
 const admin = require('firebase-admin');
 const serviceAccount = require('./superbowlsquares-db1-firebase-adminsdk-8sn7g-38bae2da58.json');
 const groupController = require('./controllers/groupController'); 
@@ -11,7 +12,10 @@ admin.initializeApp({
 });
 
 const app = express();
-const port = 3000;
+
+app.use(cors());
+
+const port = 3001;
 
 // Your routes and other server logic go here
 
@@ -19,7 +23,22 @@ app.use(express.json());
 
 app.use('/api/group', groupController);
 
-app.use('/api/game', gameController)
+app.use('/api/game', gameController);
+
+app.get('/', (req, res) => {
+    res.send('Firebase Admin SDK initialized successfully!');
+  });
+
+  app.get('/api/data', async (req, res) => {
+    try {
+      const snapshot = await admin.firestore().collection('group').get();
+      const data = snapshot.docs.map(doc => doc.data());
+      res.json(data);
+    } catch (error) {
+      console.error('Error retrieving data from Firestore:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
 
 /*
 app.get('/', (req, res) => {
