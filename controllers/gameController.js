@@ -23,4 +23,31 @@ router.post('/addDocument/:docId', async (req, res) => {
   }
 });
 
+
+// get game data for group ID
+router.get('/:groupId', async (req, res) => {
+    try {
+        // console.log('test1');
+        const groupId = req.params.groupId;
+        // console.log('test2');
+
+        if (!groupId) {
+            return res.status(400).json({ error: 'Group ID is required' });
+        }
+
+        const documentRef = admin.firestore().collection('group').doc(groupId);
+
+        const doc = await documentRef.get();
+
+        if (!doc.exists) {
+            return res.status(404).json({ error: 'Document not found' });
+        }
+
+        res.json(doc.data());
+    } catch (error) {
+        console.error('Error retrieving gameData for group: ' + groupId);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+})
+
 module.exports = router;

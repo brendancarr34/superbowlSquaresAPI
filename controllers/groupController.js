@@ -5,8 +5,10 @@ const router = express.Router();
 
 // Add a group to Firestore with a specified group ID
 router.post('/add/:groupId', async (req, res) => {
+
+    let groupId = ""
     try {
-        const groupId = req.params.groupId;
+        groupId = req.params.groupId;
         const data = req.body;
   
         if (!groupId) {
@@ -26,11 +28,11 @@ router.post('/add/:groupId', async (req, res) => {
                 if (error.code === 6) {
                     // Document already exists, handle accordingly
                     console.log('Document already exists.');
-                    firestoreMessage = 'Document already exists.';
-                    res.status(500).json({ error: firestoreMessage });
+                    firestoreMessage = 'group with name ' + groupId + ' already exists.';
+                    res.status(400).json({ error: firestoreMessage });
                 } else {
                     firestoreMessage = 'Error adding document:' + error;
-                    res.status(500).json({ error: firestoreMessage });
+                    res.status(400).json({ error: firestoreMessage });
                 }
             });
     } catch (error) {
