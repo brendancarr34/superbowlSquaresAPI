@@ -1,32 +1,10 @@
 const express = require('express');
 const admin = require('firebase-admin');
+const emptyBoard = require('../data/emptyBoard');
 
 const router = express.Router();
 
-// // Add a document to Firestore with a specified document ID
-// router.post('/addDocument/:docId', async (req, res) => {
-//   try {
-//     const docId = req.params.docId;
-//     const data = req.body;
-
-//     if (!docId) {
-//       return res.status(400).json({ error: 'Document ID is required' });
-//     }
-
-//     const docRef = admin.firestore().collection('game-collection').doc(docId);
-//     await docRef.set(data);
-
-//     res.status(201).json({ message: 'Document added successfully', documentId: docId });
-//   } catch (error) {
-//     console.error('Error adding document to Firestore:', error);
-//     res.status(500).json({ error: 'Internal server error' });
-//   }
-// });
-
 // get game data for group ID
-
-
-
 router.get('/:groupId', async (req, res) => {
     try {
         const groupId = req.params.groupId;
@@ -34,7 +12,6 @@ router.get('/:groupId', async (req, res) => {
         if (!groupId) {
             return res.status(400).json({ error: 'Group ID is required' });
         }
-        console.log('GET game for group: ' + groupId);
 
         const documentRef = admin.firestore().collection('group').doc(groupId);
 
@@ -55,8 +32,12 @@ router.post('/claimSquares/:groupId', async (req, res) => {
     try {
         const groupId = req.params.groupId;
         const data = req.body;
+        const initials = data.initials;
+        const name = data.name;
 
         if (!groupId) return res.status(400).json({ error: 'Group ID is required' });
+        if (!initials) return res.status(400).json({ error: 'Initials are required' });
+        if (!name) return res.status(400).json({ error: 'Name is required' });
 
         const documentRef = admin.firestore().collection('group').doc(groupId);
         const doc = await documentRef.get();
@@ -65,39 +46,43 @@ router.post('/claimSquares/:groupId', async (req, res) => {
 
         const existingGroupData = doc.data();
 
-        // console.log('row0: ' + existingGroupData.gameData.row0);
-        // console.log('row0_2: ' + existingGroupData.gameData['row0']);
-
-        // console.log('groupid: ' + groupId);
-        // console.log('data: ' + data.activeButtonData);
-
-        // console.log('activeButtonData[0]: ' + data.activeButtonData[0]);
-
-        
+        let error = false;
+        const validSquares = emptyBoard;
         for (let i = 0; i < 10; i++) {
-            const rowString = 'row' + i;
+            let rowString = 'row' + i;
             for (let j = 0; j < 10; j++) {
-                // if (activeButtonData[i][j] === true) {
-                //     gameData[i][j] = true;
-                //     gameNameData[i][j] = playerInitials;
-                // }
-                
-                // console.log('gameData: ' + j + ' ' + existingGroupData.gameData[rowString][j]);
-                // console.log('activeButtonData: ' + data.activeButtonData[i][j])
-                // console.log('\n\n\n')
+                // console.log('rowString: '+rowString+', j: '+j);
+
                 if (data.activeButtonData[i][j] === true && existingGroupData.gameData[rowString][j] === false) {
                     console.log('found available slot at (' + i + ',' + j + ')!')
                 } else if (data.activeButtonData[i][j] === true && existingGroupData.gameData[rowString][j] === true) {
                     console.log('a selected square has already been claimed! ');
+                } else {
+                    // console.log('test');
+                }
+
+                if (data.activeButtonData[i][j] === true) {
+                    if (existingGroupData.gameData[rowString][j] === true) {
+                        error = true;
+                        console.log('test2: ' + rowString + ', ' + j);
+                    } else if (existingGroupData.gameData[rowString][j] === false) {
+                        console.log('test3');
+                        validSquares[i][j] = true;
+                        console.log('test4');
+                    }
                 }
             }
         }
 
-        console.log('initials: ' + data.initials);
-        console.log('name: ' + data.name);
+        if (error === true) {
+            console.log(validSquares[1]);
+            return res.status(400).json({ error: 'Oh no! Somebody stole your square! Please review your squares and try again.', validSquares: validSquares });
+        } else {
+            return res.status(200).json({ message: 'successfully claimed squares'});
+        }
         
     } catch (error) {
-        res.status(500).json({ error: 'Error' + error});
+        res.status(500).json({ error: 'Error - test ' + error});
     }
 })
 
