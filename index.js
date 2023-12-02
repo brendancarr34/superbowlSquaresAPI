@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const admin = require('firebase-admin');
+const bodyParser = require('body-parser');
 const serviceAccount = require('./superbowlsquares-db1-firebase-adminsdk-8sn7g-38bae2da58.json');
 const groupController = require('./controllers/groupController'); 
 const gameController = require('./controllers/gameController'); 
@@ -19,7 +20,8 @@ const port = 3001;
 
 // Your routes and other server logic go here
 
-app.use(express.json());
+// app.use(express.json());
+app.use(bodyParser.json());
 
 app.get('/', (req, res) => {
     res.send('superbowlsquares-db1 connection established');

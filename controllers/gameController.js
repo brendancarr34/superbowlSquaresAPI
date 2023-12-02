@@ -34,6 +34,7 @@ router.post('/claimSquares/:groupId', async (req, res) => {
         const data = req.body;
         const initials = data.initials;
         const name = data.name;
+        console.log(data.activeButtonData);
 
         if (!groupId) return res.status(400).json({ error: 'Group ID is required' });
         if (!initials) return res.status(400).json({ error: 'Initials are required' });
@@ -57,18 +58,23 @@ router.post('/claimSquares/:groupId', async (req, res) => {
                     console.log('found available slot at (' + i + ',' + j + ')!')
                 } else if (data.activeButtonData[i][j] === true && existingGroupData.gameData[rowString][j] === true) {
                     console.log('a selected square has already been claimed! ');
+                    // validSquares[i][j] = false;
                 } else {
                     // console.log('test');
+                    // validSquares[i][j] = false;
                 }
 
                 if (data.activeButtonData[i][j] === true) {
                     if (existingGroupData.gameData[rowString][j] === true) {
                         error = true;
                         console.log('test2: ' + rowString + ', ' + j);
+                        validSquares[i][j] = false;
                     } else if (existingGroupData.gameData[rowString][j] === false) {
                         console.log('test3');
                         validSquares[i][j] = true;
                         console.log('test4');
+                    } else {
+                        validSquares[i][j] = false;
                     }
                 }
             }
@@ -85,5 +91,61 @@ router.post('/claimSquares/:groupId', async (req, res) => {
         res.status(500).json({ error: 'Error - test ' + error});
     }
 })
+
+// POST endpoint
+router.post('/api/checkData', async (req, res) => {
+    try {
+        // Extract data from the request body
+        const { maps } = req.body;
+        console.log(maps);
+
+        // Lookup the double array of booleans from Firestore
+        const firestoreDoc = await admin.firestore().collection('group').doc('brendan1').get();
+        const existingData = firestoreDoc.data().gameData; // Replace with your actual field name
+        const gameRows = [
+            existingData.row0,
+            existingData.row1,
+            existingData.row2,
+            existingData.row3,
+            existingData.row4,
+            existingData.row5,
+            existingData.row6,
+            existingData.row7,
+            existingData.row8,
+            existingData.row9,
+        ];
+
+        // Accumulate valid maps
+        const validMaps = [];
+
+        // Iterate over maps in the request array
+        for (const map of maps) {
+            // Extract row and col values from the map
+            const { row, col } = map;
+
+            // Check if existingData[row][col] is false (valid)
+            if (!gameRows[row][col]) {
+                console.log(`Valid square at row ${row} and column ${col}`);
+                validMaps.push({ row, col });
+            }
+        }
+
+        if (validMaps.length === maps.length) {
+            console.log('All maps are valid');
+            return res.status(200).json({
+                message: 'Success',
+            });
+        } else {
+            console.log('Some maps are invalid! these are the valid ones:', validMaps);
+            return res.status(400).json({
+                error: 'Some provided maps have invalid values.',
+                validMaps: validMaps,
+            });
+        }
+    } catch (error) {
+        // Handle errors and send an error response
+        res.status(500).json({ error: 'Error - ' + error.message });
+    }
+});
 
 module.exports = router;
