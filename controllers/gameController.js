@@ -30,6 +30,7 @@ router.get('/:groupId', async (req, res) => {
 
 router.post('/claimSquares/:groupId', async (req, res) => {
     try {
+        
         const groupId = req.params.groupId;
         const data = req.body;
         const initials = data.initials;
@@ -95,13 +96,18 @@ router.post('/claimSquares/:groupId', async (req, res) => {
 // POST endpoint
 router.post('/api/checkData', async (req, res) => {
     try {
+        console.log('/api/checkData');
+
         // Extract data from the request body
         const { maps } = req.body;
-        console.log(maps);
+        console.log('requestMaps ' + maps);
+        console.log('req.body ' + req.body);
+        console.log('req.body:', JSON.stringify(req.body, null, 2));
+
 
         // Lookup the double array of booleans from Firestore
-        const firestoreDoc = await admin.firestore().collection('group').doc('brendan1').get();
-        const existingData = firestoreDoc.data().gameData; // Replace with your actual field name
+        const firestoreDoc = await admin.firestore().collection('group').doc('brendan11').get();
+        const existingData = firestoreDoc.data().gameData;
         const gameRows = [
             existingData.row0,
             existingData.row1,
@@ -125,13 +131,29 @@ router.post('/api/checkData', async (req, res) => {
 
             // Check if existingData[row][col] is false (valid)
             if (!gameRows[row][col]) {
-                console.log(`Valid square at row ${row} and column ${col}`);
+                console.log(`\nValid square at row ${row} and column ${col}`);
                 validMaps.push({ row, col });
             }
         }
 
         if (validMaps.length === maps.length) {
-            console.log('All maps are valid');
+            // console.log('\nAll maps are valid\n');
+            // return res.status(200).json({
+            //     message: 'Success',
+            // });
+            console.log('\nAll maps are valid. Updating gameData in Firestore.\n');
+
+            // Update gameData in Firestore
+            for (const map of maps) {
+                const { row, col } = map;
+                existingData[`row${row}`][col] = true;
+            }
+
+            // Update Firestore document with the modified gameData
+            await firestoreDoc.ref.update({ gameData: existingData });
+
+            console.log('GameData updated in Firestore');
+
             return res.status(200).json({
                 message: 'Success',
             });

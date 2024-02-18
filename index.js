@@ -24,7 +24,7 @@ const port = 3001;
 app.use(bodyParser.json());
 
 app.get('/', (req, res) => {
-    res.send('superbowlsquares-db1 connection established');
+    res.send('superbowlsquares-db1 connection established!');
   });
 
 app.use('/api/group', groupController);
