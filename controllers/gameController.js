@@ -173,6 +173,7 @@ router.post('/api/checkData', async (req, res) => {
 // POST endpoint
 router.post('/api/validateAndClaimSquares/:groupId', async (req, res) => {
     try {
+
         // Extract groupId
         const groupId = req.params.groupId;
         console.log('/api/validateAndClaimSquares/' + groupId);
