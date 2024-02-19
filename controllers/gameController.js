@@ -397,11 +397,7 @@ router.post('/api/validateAndClaimSquaresV3/:groupId', async (req, res) => {
 
             existingPlayers.forEach(map => {
                 // Extract 'initials' and 'playerName' from each map
-                const { initials, playerName } = map;
-                console.log('initials, name: ' + initials + ', ' + playerName);
-                // Add the entry to the initialsMap
-                console.log('existing: ' + initials);
-                console.log('initials: ' + requestInitials);
+                const { initials } = map;
                 if (initials == requestInitials) {
                     initialsExist = true;
                 }
