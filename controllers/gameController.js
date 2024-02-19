@@ -329,4 +329,91 @@ router.post('/api/validateAndClaimSquaresV2/:groupId', async (req, res) => {
     }
 });
 
+// POST endpoint
+router.post('/api/validateAndClaimSquaresV3/:groupId', async (req, res) => {
+    try {
+
+        // Extract groupId
+        const groupId = req.params.groupId;
+        console.log('/api/validateAndClaimSquaresV3/' + groupId);
+
+        console.log('req.body: ' + JSON.stringify(req.body));
+
+        // Extract data from the request body
+        const { maps } = req.body;
+        const { initials } = req.body;
+        const { playerName } = req.body;
+        console.log('playerName: ' + playerName)
+
+        // Lookup the double array of booleans from Firestore
+        const firestoreDoc = await admin.firestore().collection('group').doc(groupId).get();
+        const existingData = firestoreDoc.data().gameData;
+        const gameRows = [
+            existingData.row0,
+            existingData.row1,
+            existingData.row2,
+            existingData.row3,
+            existingData.row4,
+            existingData.row5,
+            existingData.row6,
+            existingData.row7,
+            existingData.row8,
+            existingData.row9,
+        ];
+
+        // Accumulate valid maps
+        const validMaps = [];
+
+        // Iterate over maps in the request array
+        for (const map of maps) {
+            // Extract row and col values from the map
+            const { row, col } = map;
+
+            // Check if existingData[row][col] is false (valid)
+            if (!gameRows[row][col]) {
+                console.log(`\nValid square at row ${row} and column ${col}`);
+                validMaps.push({ row, col });
+            }
+        }
+
+        if (validMaps.length === maps.length) {
+            // console.log('\nAll maps are valid\n');
+            // return res.status(200).json({
+            //     message: 'Success',
+            // });
+            console.log('\nAll maps are valid. Updating gameData in Firestore.\n');
+
+            // Update gameData in Firestore
+            for (const map of maps) {
+                const { row, col } = map;
+                existingData[`row${row}`][col] = true;
+                existingData[`row${row}_players`][col] = initials;
+            }
+
+            const existingPlayers = firestoreDoc.data().players;
+            existingPlayers.push({initials : initials, playerName : playerName})
+
+            // Update Firestore document with the modified gameData
+            await firestoreDoc.ref.update({ gameData: existingData });
+
+            await firestoreDoc.ref.update({ players : existingPlayers})
+
+            console.log('GameData updated in Firestore');
+
+            return res.status(200).json({
+                message: 'Success',
+            });
+        } else {
+            console.log('Some maps are invalid! these are the valid ones:', validMaps);
+            return res.status(400).json({
+                error: 'Some provided maps have invalid values.',
+                validMaps: validMaps,
+            });
+        }
+    } catch (error) {
+        // Handle errors and send an error response
+        res.status(500).json({ error: 'Error - ' + error.message });
+    }
+});
+
 module.exports = router;

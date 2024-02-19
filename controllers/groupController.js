@@ -41,4 +41,75 @@ router.post('/add/:groupId', async (req, res) => {
     }
   });
 
+router.post('/api/deleteDocument', async (req, res) => {
+    try {
+        // Extract the document name from the request body
+        const { documentName } = req.body;
+    
+        if (!documentName) {
+          return res.status(400).json({ error: 'Document name is required' });
+        }
+    
+        // Get a reference to the Firestore document
+        const docRef = admin.firestore().collection('group').doc(documentName);
+    
+        // Check if the document exists
+        const docSnapshot = await docRef.get();
+        if (!docSnapshot.exists) {
+          return res.status(404).json({ error: 'Document not found' });
+        }
+    
+        // Delete the document
+        await docRef.delete();
+    
+        // Return success response
+        return res.status(200).json({ message: 'Document deleted successfully' });
+      } catch (error) {
+        console.error('Error deleting document:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+      }
+});
+
+// POST endpoint to delete Firestore documents by document name
+router.post('/api/deleteDocuments', async (req, res) => {
+    try {
+        console.log('/api/deleteDocuments');
+
+        // Extract document names from the request body
+        const { documentNames } = req.body;
+        console.log('Document names to delete: ', documentNames);
+
+        // Delete each document in the list
+        const db = admin.firestore();
+        const deletionResults = [];
+
+        for (const documentName of documentNames) {
+            try {
+                const documentRef = db.collection('group').doc(documentName);
+                const snapshot = await documentRef.get();
+
+                if (snapshot.exists) {
+                    await documentRef.delete();
+                    deletionResults.push({ documentName: documentName, deleted: true });
+                    console.log(`Document '${documentName}' successfully deleted.`);
+                } else {
+                    deletionResults.push({ documentName: documentName, deleted: false, error: 'Document not found' });
+                    console.log(`Document '${documentName}' not found.`);
+                }
+            } catch (error) {
+                deletionResults.push({ documentName: documentName, deleted: false, error: error.message });
+                console.error(`Error deleting document '${documentName}':`, error);
+            }
+        }
+
+        return res.status(200).json({
+            message: 'Deletion process completed',
+            deletionResults: deletionResults
+        });
+    } catch (error) {
+        // Handle errors and send an error response
+        res.status(500).json({ error: 'Error - ' + error.message });
+    }
+});
+
 module.exports = router;
