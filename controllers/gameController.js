@@ -342,6 +342,7 @@ router.post('/api/validateAndClaimSquaresV3/:groupId', async (req, res) => {
         // Extract data from the request body
         const { maps } = req.body;
         const { initials } = req.body;
+        const requestInitials = initials;
         const { playerName } = req.body;
         console.log('playerName: ' + playerName)
 
@@ -391,6 +392,27 @@ router.post('/api/validateAndClaimSquaresV3/:groupId', async (req, res) => {
             }
 
             const existingPlayers = firestoreDoc.data().players;
+
+            let initialsExist = false;
+
+            existingPlayers.forEach(map => {
+                // Extract 'initials' and 'playerName' from each map
+                const { initials, playerName } = map;
+                console.log('initials, name: ' + initials + ', ' + playerName);
+                // Add the entry to the initialsMap
+                console.log('existing: ' + initials);
+                console.log('initials: ' + requestInitials);
+                if (initials == requestInitials) {
+                    initialsExist = true;
+                }
+            });
+
+            if (initialsExist) {
+                return res.status(400).json({
+                    error: 'initials already exist'
+                });
+            }
+
             existingPlayers.push({initials : initials, playerName : playerName})
 
             // Update Firestore document with the modified gameData
