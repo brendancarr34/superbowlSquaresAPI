@@ -32,7 +32,7 @@ app.use('/api/game', gameController);
 //     console.log(`Server is running at http://localhost:${port}`);
 //   });
 
-const host = '10.0.0.65'; // Listen on all available network interfaces
+const host = '10.0.0.65';
 app.listen(port, host, () => {
   console.log(`Server is running on ${host}:${port}`);
 });

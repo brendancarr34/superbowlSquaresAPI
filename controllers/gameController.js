@@ -378,12 +378,6 @@ router.post('/api/validateAndClaimSquaresV3/:groupId', async (req, res) => {
         }
 
         if (validMaps.length === maps.length) {
-            // console.log('\nAll maps are valid\n');
-            // return res.status(200).json({
-            //     message: 'Success',
-            // });
-            console.log('\nAll maps are valid. Updating gameData in Firestore.\n');
-
             // Update gameData in Firestore
             for (const map of maps) {
                 const { row, col } = map;
@@ -414,7 +408,22 @@ router.post('/api/validateAndClaimSquaresV3/:groupId', async (req, res) => {
             // Update Firestore document with the modified gameData
             await firestoreDoc.ref.update({ gameData: existingData });
 
-            await firestoreDoc.ref.update({ players : existingPlayers})
+            await firestoreDoc.ref.update({ players : existingPlayers});
+
+            let squaresClaimed = true;
+            for (let i = 0; i < 10; i++) {
+                for (let j = 0; j < 10; j++) {
+                    if (existingData[`row${i}`][j] == false) {
+                        squaresClaimed = false;
+                    }
+                }
+            }
+
+            console.log('allSquaresClaimed: ' + squaresClaimed);
+
+            if (squaresClaimed) {
+                await firestoreDoc.ref.update({ allSquaresClaimed : true });
+            }
 
             console.log('GameData updated in Firestore');
 
