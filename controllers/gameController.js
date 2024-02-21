@@ -462,13 +462,13 @@ router.post('/api/setNumbers/:groupName', async (req, res) => {
     // Check for repeating numbers in topNumbers
     const topNumbersSet = new Set(topNumbers);
     if (topNumbersSet.size !== topNumbers.length) {
-        return res.status(400).json({ message: 'topNumbers array contains repeating numbers.' });
+        return res.status(400).json({ message: 'Top numbers contain a repeating number.' });
     }
 
     // Check for repeating numbers in sideNumbers
     const sideNumbersSet = new Set(sideNumbers);
     if (sideNumbersSet.size !== sideNumbers.length) {
-        return res.status(400).json({ message: 'sideNumbers array contains repeating numbers.' });
+        return res.status(400).json({ message: 'Side numbers contain a repeating number.' });
     }
 
     const firestoreDoc = await admin.firestore().collection('group').doc(groupName).get();
