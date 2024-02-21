@@ -443,4 +443,41 @@ router.post('/api/validateAndClaimSquaresV3/:groupId', async (req, res) => {
     }
 });
 
+// Endpoint to handle POST request for setting numbers with groupName in the URL
+router.post('/api/setNumbers/:groupName', async (req, res) => {
+    const groupName = req.params.groupName;
+    const topNumbers = req.body.topNumbers;
+    const sideNumbers = req.body.sideNumbers;
+
+    // Check if groupName, topNumbers, and sideNumbers are provided
+    if (!groupName || !topNumbers || !sideNumbers) {
+        return res.status(400).json({ message: 'groupName, topNumbers, and sideNumbers are required.' });
+    }
+
+    // Check if topNumbers and sideNumbers arrays have a length of 10
+    if (topNumbers.length !== 10 || sideNumbers.length !== 10) {
+        return res.status(400).json({ message: 'topNumbers and sideNumbers arrays must have a length of 10.' });
+    }
+
+    // Check for repeating numbers in topNumbers
+    const topNumbersSet = new Set(topNumbers);
+    if (topNumbersSet.size !== topNumbers.length) {
+        return res.status(400).json({ message: 'topNumbers array contains repeating numbers.' });
+    }
+
+    // Check for repeating numbers in sideNumbers
+    const sideNumbersSet = new Set(sideNumbers);
+    if (sideNumbersSet.size !== sideNumbers.length) {
+        return res.status(400).json({ message: 'sideNumbers array contains repeating numbers.' });
+    }
+
+    const firestoreDoc = await admin.firestore().collection('group').doc(groupName).get();
+    // const existingData = firestoreDoc.data();
+
+    await firestoreDoc.ref.update({ topNumbers: topNumbers });
+    await firestoreDoc.ref.update({ sideNumbers: sideNumbers });
+
+    res.json({ message: 'Data updated successfully.' });
+});
+
 module.exports = router;
