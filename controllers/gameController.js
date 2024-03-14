@@ -332,19 +332,18 @@ router.post('/api/validateAndClaimSquaresV2/:groupId', async (req, res) => {
 // POST endpoint
 router.post('/api/validateAndClaimSquaresV3/:groupId', async (req, res) => {
     try {
-
         // Extract groupId
         const groupId = req.params.groupId;
         console.log('/api/validateAndClaimSquaresV3/' + groupId);
 
-        console.log('req.body: ' + JSON.stringify(req.body));
+        // console.log('req.body: ' + JSON.stringify(req.body));
 
         // Extract data from the request body
         const { maps } = req.body;
         const { initials } = req.body;
         const requestInitials = initials;
         const { playerName } = req.body;
-        console.log('playerName: ' + playerName)
+        console.log('adding squares for playerName: ' + playerName + ', initials: ' + initials);
 
         // Lookup the double array of booleans from Firestore
         const firestoreDoc = await admin.firestore().collection('group').doc(groupId).get();
@@ -372,7 +371,7 @@ router.post('/api/validateAndClaimSquaresV3/:groupId', async (req, res) => {
 
             // Check if existingData[row][col] is false (valid)
             if (!gameRows[row][col]) {
-                console.log(`\nValid square at row ${row} and column ${col}`);
+                // console.log(`\nValid square at row ${row} and column ${col}`);
                 validMaps.push({ row, col });
             }
         }
@@ -476,8 +475,35 @@ router.post('/api/setNumbers/:groupName', async (req, res) => {
 
     await firestoreDoc.ref.update({ topNumbers: topNumbers });
     await firestoreDoc.ref.update({ sideNumbers: sideNumbers });
+    await firestoreDoc.ref.update({ numbersSet: true });
 
     res.json({ message: 'Data updated successfully.' });
 });
+
+// Endpoint to handle POST request for setting teams with groupName in the URL
+router.post('/api/setTeams/:groupName', async (req, res) => {
+    const groupName = req.params.groupName;
+    const topTeam = req.body.topTeam;
+    const sideTeam = req.body.sideTeam;
+
+    // Check if groupName, topTeam, and sideTeam are provided
+    if (!groupName || !topTeam || !sideTeam) {
+        return res.status(400).json({ message: 'groupName, topTeam, and sideTeam are required.' });
+    }
+
+    const firestoreDoc = await admin.firestore().collection('group').doc(groupName).get();
+
+    // Update teams data in Firestore as a map and set teamsSet to true
+    await firestoreDoc.ref.update({
+        teams: {
+            top: topTeam,
+            side: sideTeam
+        },
+        teamsSet: true
+    });
+
+    res.json({ message: 'Teams updated successfully.' });
+});
+
 
 module.exports = router;
