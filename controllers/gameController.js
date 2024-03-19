@@ -418,7 +418,7 @@ router.post('/api/validateAndClaimSquaresV3/:groupId', async (req, res) => {
                 }
             }
 
-            console.log('allSquaresClaimed: ' + squaresClaimed);
+            // console.log('allSquaresClaimed: ' + squaresClaimed);
 
             if (squaresClaimed) {
                 await firestoreDoc.ref.update({ allSquaresClaimed : true });
@@ -503,6 +503,42 @@ router.post('/api/setTeams/:groupName', async (req, res) => {
     });
 
     res.json({ message: 'Teams updated successfully.' });
+});
+
+// POST endpoint to add preferences to a Firestore document by groupId
+router.post('/api/setPreferences/:groupId', async (req, res) => {
+    console.log('hit setPreferences endpoint');
+    try {
+        // Extract groupId from the URL
+        const groupId = req.params.groupId;
+        console.log('/api/setPreferences/' + groupId);
+
+        // Extract data from the request body
+        const { autoSetNumbers } = req.body;
+
+        // Check if autoSetNumbers is provided
+        if (autoSetNumbers === undefined || autoSetNumbers === null) {
+            return res.status(400).json({ error: 'autoSetNumbers is required.' });
+        }
+
+        // Lookup the Firestore document by groupId
+        const firestoreDoc = await admin.firestore().collection('group').doc(groupId).get();
+
+        // Update preferences data in Firestore
+        await firestoreDoc.ref.update({
+            preferences: {
+                autoSetNumbers: autoSetNumbers
+            }
+        });
+
+        // Return success response
+        return res.status(200).json({
+            message: 'Preferences updated successfully.',
+        });
+    } catch (error) {
+        // Handle errors and send an error response
+        res.status(500).json({ error: 'Error - ' + error.message });
+    }
 });
 
 
