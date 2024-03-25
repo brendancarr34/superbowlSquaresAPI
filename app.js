@@ -28,11 +28,11 @@ app.use('/api/group', groupController);
 
 app.use('/api/game', gameController);
 
-// app.listen(port, () => {
-//     console.log(`Server is running at http://localhost:${port}`);
-//   });
+app.listen(port, () => {
+    console.log(`Server is running at http://localhost:${port}`);
+  });
 
-const host = '10.0.0.64';
-app.listen(port, host, () => {
-  console.log(`Server is running on ${host}:${port}`);
-});
+// const host = '10.0.0.65';
+// app.listen(port, host, () => {
+//   console.log(`Server is running on ${host}:${port}`);
+// });
