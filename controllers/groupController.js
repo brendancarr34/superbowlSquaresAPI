@@ -112,4 +112,31 @@ router.post('/api/deleteDocuments', async (req, res) => {
     }
 });
 
+router.get('/api/joinGroup/:groupId', async (req, res) => {
+    
+    let groupId = ""
+    try {
+        groupId = req.params.groupId;
+        console.log(groupId)
+
+        if (!groupId) {
+            return res.status(400).json({ error: 'Group ID is required' });
+        }
+
+        const documentRef = admin.firestore().collection('group').doc(groupId);
+
+        const doc = await documentRef.get();
+
+        if (!doc.exists) {
+            console.log('doc does not exist');
+            return res.status(404).json({ error: 'Document not found' });
+        }
+
+        return res.json(doc.data());
+    } catch (error) {
+        console.error('Error retrieving gameData for group: ' + groupId);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+})
+
 module.exports = router;
