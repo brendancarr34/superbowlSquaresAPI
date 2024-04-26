@@ -497,8 +497,6 @@ router.post('/api/validateAndClaimSquaresV4/:groupId', async (req, res) => {
                 existingData[`row${row}`][col] = true;
                 existingData[`row${row}_players`][col] = initials;
             }
-            // Update Firestore document with the modified gameData
-            await firestoreDoc.ref.update({ gameData: existingData });
 
             const existingPlayers = firestoreDoc.data().players;
             let initialsExist = false;
@@ -514,6 +512,10 @@ router.post('/api/validateAndClaimSquaresV4/:groupId', async (req, res) => {
                     error: 'initials already exist'
                 });
             }
+
+            // Update Firestore document with the modified gameData
+            await firestoreDoc.ref.update({ gameData: existingData });
+
             existingPlayers.push({initials : initials, playerName : playerName});
             await firestoreDoc.ref.update({ players : existingPlayers});
 
