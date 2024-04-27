@@ -175,8 +175,21 @@ router.post('/api/joinGroup/:groupId', async (req, res) => {
     }
 })
 
-// router.get('/api/allGroups', async (req, res) => {
-//     const documentRef = admin.firestore().collection('group');
-// })
+router.get('/api/allGroups', async (req, res) => {
+    try {
+        const collectionRef = admin.firestore().collection('group'); // Replace 'your_collection' with your collection name
+        const snapshot = await collectionRef.get();
+    
+        const documentNames = [];
+        snapshot.forEach(doc => {
+          documentNames.push(doc.id);
+        });
+    
+        res.json(documentNames);
+      } catch (error) {
+        console.error('Error fetching documents:', error);
+        res.status(500).send('Error fetching documents');
+      }
+})
 
 module.exports = router;
