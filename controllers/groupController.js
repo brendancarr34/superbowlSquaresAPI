@@ -192,4 +192,27 @@ router.get('/api/allGroups', async (req, res) => {
       }
 })
 
+// Endpoint to look up a document by name in the 'group' collection
+router.get('/api/hasPassword/:groupId', async (req, res) => {
+    try {
+      const groupId = req.params.groupId;
+      const docRef = admin.firestore().collection('group').doc(groupId);
+      const doc = await docRef.get();
+  
+      if (!doc.exists) {
+        return res.status(404).json({ error: 'Document not found' });
+      }
+  
+      const data = doc.data();
+      if (data.preferences.groupPassword != '') {
+        return res.json(true);
+      }
+  
+      return res.json(false);
+    } catch (error) {
+      console.error('Error looking up document:', error);
+      res.status(500).send('Error looking up document');
+    }
+  });
+
 module.exports = router;
