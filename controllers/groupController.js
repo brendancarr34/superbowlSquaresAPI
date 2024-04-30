@@ -195,24 +195,50 @@ router.get('/api/allGroups', async (req, res) => {
 // Endpoint to look up a document by name in the 'group' collection
 router.get('/api/hasPassword/:groupId', async (req, res) => {
     try {
-      const groupId = req.params.groupId;
-      const docRef = admin.firestore().collection('group').doc(groupId);
-      const doc = await docRef.get();
-  
-      if (!doc.exists) {
+        const groupId = req.params.groupId;
+        const docRef = admin.firestore().collection('group').doc(groupId);
+        const doc = await docRef.get();
+
+        if (!doc.exists) {
         return res.status(404).json({ error: 'Document not found' });
-      }
-  
-      const data = doc.data();
-      if (data.preferences.groupPassword != '') {
+        }
+
+        const data = doc.data();
+        if (data.preferences.groupPassword != '') {
         return res.json(true);
-      }
-  
-      return res.json(false);
+        }
+
+        return res.json(false);
     } catch (error) {
-      console.error('Error looking up document:', error);
-      res.status(500).send('Error looking up document');
+        console.error('Error looking up document:', error);
+        return res.status(500).send('Error looking up document');
     }
-  });
+});
+
+// Endpoint to get Venmo info
+router.get('/api/getVenmoInfo/:groupId', async (req, res) => {
+    try {
+        const groupId = req.params.groupId;
+        const docRef = admin.firestore().collection('group').doc(groupId);
+        const doc = await docRef.get();
+
+        if (!doc.exists) {
+            return res.status(404).json({ error: 'Document not found' });
+        }
+        
+        const data = doc.data();
+        const venmoUsername = data.preferences.venmoUsername;
+        const paymentAmount = data.preferences.paymentAmount;
+        if (venmoUsername != '' && paymentAmount != '') {
+            return res.json({hasVenmoInfo: true, venmoUsername: venmoUsername, paymentAmount: paymentAmount});
+        }
+
+        return res.json({hasVenmoInfo: false});
+
+    } catch (error) {
+        console.error('Error looking up document:', error);
+        return res.status(500).send('Error looking up document');
+    }
+});
 
 module.exports = router;
