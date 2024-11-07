@@ -241,4 +241,44 @@ router.get('/api/getVenmoInfo/:groupId', async (req, res) => {
     }
 });
 
+// POST endpoint to update specific values in the 'preferences' field of a 'group' document
+router.post('/api/updatePreferences/:groupId', async (req, res) => {
+    try {
+        const groupId = req.params.groupId;
+        const updatedPreferences = req.body;
+
+        if (!groupId) {
+            return res.status(400).json({ error: 'Group ID is required' });
+        }
+
+        if (!updatedPreferences || typeof updatedPreferences !== 'object') {
+            return res.status(400).json({ error: 'Updated preferences data is required and should be an object' });
+        }
+
+        const docRef = admin.firestore().collection('group').doc(groupId);
+
+        // Check if the document exists
+        const doc = await docRef.get();
+        if (!doc.exists) {
+            return res.status(404).json({ error: 'Document not found' });
+        }
+
+        // Update specific fields in the 'preferences' map
+        const updateObject = {};
+        for (const [key, value] of Object.entries(updatedPreferences)) {
+            updateObject[`preferences.${key}`] = value;
+        }
+
+        await docRef.update(updateObject);
+
+        res.status(200).json({ message: 'Preferences updated successfully' });
+    } catch (error) {
+        console.error('Error updating preferences:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+
+
+
 module.exports = router;
