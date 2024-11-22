@@ -278,7 +278,43 @@ router.post('/api/updatePreferences/:groupId', async (req, res) => {
     }
 });
 
+router.post('/api/updatePaymentBreakdown/:groupId', async (req, res) => {
 
+    // console.log('test111');
+    // return res.status(400).json({ error: 'Group ID is required' });
 
+    try {
+        const groupId = req.params.groupId;
+        const { paymentBreakdown } = req.body;
+
+        if (!groupId) {
+            return res.status(400).json({ error: 'Group ID is required' });
+        }
+
+        // console.log('paymentBreakdown: ' + JSON.stringify(paymentBreakdown));
+
+        if (!paymentBreakdown || typeof paymentBreakdown !== 'object') {
+            return res.status(400).send({ error: 'Invalid paymentBreakdown object' });
+        }
+
+        const docRef = admin.firestore().collection('group').doc(groupId);
+
+        // Check if the document exists
+        const doc = await docRef.get();
+        if (!doc.exists) {
+            return res.status(404).json({ error: 'Document not found' });
+        }
+
+        // console.log('paymentBreakdown: ' + JSON.stringify(paymentBreakdown));
+
+        await docRef.update(paymentBreakdown);
+
+        res.status(200).json({ message: 'Preferences updated successfully' });
+    }
+    catch (error) {
+        console.error('Error updating payment breakdown:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+})
 
 module.exports = router;
