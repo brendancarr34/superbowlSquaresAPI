@@ -656,5 +656,61 @@ router.post('/api/setPreferences/:groupId', async (req, res) => {
     }
 });
 
+router.post('/api/ledger/:groupId', async (req, res) => {
+    try {
+        console.log('hit ledger endpoint');
+        const { groupId } = req.params;
+        const  ledger  = req.body;
+
+        console.log(groupId);
+
+        // Validate request body
+        if (!Array.isArray(ledger) || !ledger.every(item =>
+            typeof item.label === 'string' &&
+            typeof item.paid === 'boolean' &&
+            typeof item.notes === 'string'
+        )) {
+            console.log("Invalid ledger format");
+            return res.status(400).json({ error: "Invalid ledger format" });
+        }
+
+        // Reference to the Firestore document
+        const groupRef = admin.firestore().collection('group').doc(groupId);
+        const groupDoc = await groupRef.get();
+
+        if (!groupDoc.exists) {
+            return res.status(404).json({ error: "Group not found" });
+        }
+
+        // Get existing ledger or initialize
+        const existingLedger = groupDoc.data().ledger || [];
+
+        console.log(existingLedger);
+
+        // Merge or add new entries
+        ledger.forEach(newEntry => {
+            const existingEntry = existingLedger.find(entry => entry.label === newEntry.label);
+            if (existingEntry) {
+                existingEntry.paid = newEntry.paid;
+                existingEntry.notes = newEntry.notes;
+            } else {
+                existingLedger.push(newEntry);
+            }
+        });
+
+        console.log(existingLedger);
+
+        // Update Firestore document
+        await groupRef.update({ ledger: existingLedger });
+
+        console.log('successfully updated ledger');
+
+        res.json({ message: "Ledger updated successfully", ledger: existingLedger });
+    } catch (error) {
+        console.error("Error updating ledger:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+});
+
 
 module.exports = router;
