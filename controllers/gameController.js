@@ -563,6 +563,8 @@ router.post('/api/setNumbers/:groupName', async (req, res) => {
     const topNumbers = req.body.topNumbers;
     const sideNumbers = req.body.sideNumbers;
 
+    console.log('test');
+
     // Check if groupName, topNumbers, and sideNumbers are provided
     if (!groupName || !topNumbers || !sideNumbers) {
         return res.status(400).json({ message: 'groupName, topNumbers, and sideNumbers are required.' });
@@ -573,26 +575,38 @@ router.post('/api/setNumbers/:groupName', async (req, res) => {
         return res.status(400).json({ message: 'topNumbers and sideNumbers arrays must have a length of 10.' });
     }
 
-    // Check for repeating numbers in topNumbers
-    const topNumbersSet = new Set(topNumbers);
-    if (topNumbersSet.size !== topNumbers.length) {
-        return res.status(400).json({ message: 'Top numbers contain a repeating number.' });
-    }
-
-    // Check for repeating numbers in sideNumbers
-    const sideNumbersSet = new Set(sideNumbers);
-    if (sideNumbersSet.size !== sideNumbers.length) {
-        return res.status(400).json({ message: 'Side numbers contain a repeating number.' });
+    function convertSetToIntegers(set) {
+        return new Set([...set].map(item => parseInt(item, 10)));
     }
 
     const firestoreDoc = await admin.firestore().collection('group').doc(groupName).get();
-    // const existingData = firestoreDoc.data();
 
-    await firestoreDoc.ref.update({ topNumbers: topNumbers });
-    await firestoreDoc.ref.update({ sideNumbers: sideNumbers });
-    await firestoreDoc.ref.update({ numbersSet: true });
-
-    res.json({ message: 'Data updated successfully.' });
+    // Check for repeating numbers in topNumbers and sideNumbers
+    const topNumbersSet = new Set(topNumbers);
+    console.log(convertSetToIntegers(topNumbers));
+    const sideNumbersSet = new Set(sideNumbers);
+    if (convertSetToIntegers(topNumbers).size !== topNumbers.length || convertSetToIntegers(sideNumbers).size !== sideNumbers.length) {
+        if (topNumbersSet.size == 1 && topNumbersSet.has('?') && sideNumbersSet.size == 1 && sideNumbersSet.has('?'))
+        {
+            await firestoreDoc.ref.update({ topNumbers: topNumbers });
+            await firestoreDoc.ref.update({ sideNumbers: sideNumbers });
+            await firestoreDoc.ref.update({ numbersSet: false });
+        
+            res.json({ message: 'Numbers reset successfully.' });
+        }
+        else
+        {
+            return res.status(400).json({ message: 'One of the rows contains a repeating number.' });
+        }
+    }
+    else
+    {
+        await firestoreDoc.ref.update({ topNumbers: topNumbers });
+        await firestoreDoc.ref.update({ sideNumbers: sideNumbers });
+        await firestoreDoc.ref.update({ numbersSet: true });
+    
+        res.json({ message: 'Data updated successfully.' });
+    }
 });
 
 // Endpoint to handle POST request for setting teams with groupName in the URL
