@@ -5,6 +5,7 @@ const bodyParser = require('body-parser');
 const serviceAccount = require('./superbowlsquares-db1-firebase-adminsdk-8sn7g-38bae2da58.json');
 const groupController = require('./controllers/groupController'); 
 const gameController = require('./controllers/gameController'); 
+const betaAccessController = require('./controllers/betaAccessController');
 const { WebSocketServer } = require('ws');
 
 // Initialize Firebase Admin SDK
@@ -28,6 +29,8 @@ app.get('/', (req, res) => {
 app.use('/api/group', groupController);
 
 app.use('/api/game', gameController);
+
+app.use('/api/beta-access', betaAccessController);
 
 const server = app.listen(port, () => {
     console.log(`Server is running at http://localhost:${port}`);
