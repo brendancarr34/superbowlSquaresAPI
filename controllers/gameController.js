@@ -516,7 +516,7 @@ router.post('/api/validateAndClaimSquaresV4/:groupId', async (req, res) => {
             // Update Firestore document with the modified gameData
             await firestoreDoc.ref.update({ gameData: existingData });
 
-            existingPlayers.push({initials : initials, playerName : playerName});
+            existingPlayers.push({initials : initials, playerName : playerName, squaresClaimed: maps.length});
             await firestoreDoc.ref.update({ players : existingPlayers});
 
             const existingColors = firestoreDoc.data().colorData;
