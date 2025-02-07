@@ -64,6 +64,11 @@ wss.on('connection', (ws) => {
       // Set up Firestore listener for the specific document
       unsubscribe = docRef.onSnapshot((doc) => {
         if (doc.exists) {
+          let docData = doc.data();
+          delete docData.adminPassword; // Remove the adminPassword field
+
+          ws.send(JSON.stringify({ [doc.id]: docData }));
+          
           ws.send(JSON.stringify({ [doc.id]: doc.data() }));
         } else {
           ws.send(JSON.stringify({ error: "Document not found" }));

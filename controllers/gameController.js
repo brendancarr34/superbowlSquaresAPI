@@ -22,12 +22,15 @@ router.get('/:groupId', async (req, res) => {
             return res.status(404).json({ error: 'Document not found' });
         }
 
-        res.json(doc.data());
+        let docData = doc.data();
+        delete docData.adminPassword;
+
+        res.json(docData);
     } catch (error) {
         console.error('Error retrieving gameData for group: ' + groupId);
         res.status(500).json({ error: 'Internal server error' });
     }
-})
+});
 
 router.get('/auth-admin/:groupId/:userInputAdminPassword', async (req, res) => {
     try {
@@ -73,8 +76,9 @@ router.get('/auth-admin/:groupId/:userInputAdminPassword', async (req, res) => {
         console.error('Error looking up document:', error);
         return res.status(500).send('Error looking up document');
     }
-})
+});
 
+// POST endpoint
 router.post('/claimSquares/:groupId', async (req, res) => {
     try {
         const groupId = req.params.groupId;
@@ -137,7 +141,7 @@ router.post('/claimSquares/:groupId', async (req, res) => {
     } catch (error) {
         res.status(500).json({ error: 'Error - test ' + error});
     }
-})
+});
 
 // POST endpoint
 router.post('/api/checkData', async (req, res) => {
@@ -215,7 +219,6 @@ router.post('/api/checkData', async (req, res) => {
         res.status(500).json({ error: 'Error - ' + error.message });
     }
 });
-
 
 // POST endpoint
 router.post('/api/validateAndClaimSquares/:groupId', async (req, res) => {
@@ -610,8 +613,6 @@ router.post('/api/setNumbers/:groupName', async (req, res) => {
     const topNumbers = req.body.topNumbers;
     const sideNumbers = req.body.sideNumbers;
 
-    console.log('test');
-
     // Check if groupName, topNumbers, and sideNumbers are provided
     if (!groupName || !topNumbers || !sideNumbers) {
         return res.status(400).json({ message: 'groupName, topNumbers, and sideNumbers are required.' });
@@ -772,6 +773,5 @@ router.post('/api/ledger/:groupId', async (req, res) => {
         res.status(500).json({ error: "Internal server error" });
     }
 });
-
 
 module.exports = router;
