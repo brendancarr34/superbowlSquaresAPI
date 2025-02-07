@@ -39,26 +39,48 @@ const server = app.listen(port, () => {
 // Attach WebSocket server to the HTTP server
 const wss = new WebSocketServer({ server });
 
-// Handle WebSocket connection
 wss.on('connection', (ws) => {
   console.log('New client connected');
 
   const db = admin.firestore();
 
-const collectionRef = db.collection('group');
-const unsubscribe = collectionRef.onSnapshot((snapshot) => {
-  // Structure data as an array of objects with doc.id: doc.data()
-  const data = snapshot.docs.map((doc) => ({
-      [doc.id]: doc.data()
-  }));
+  let unsubscribe = null; // To store the Firestore listener
 
-  ws.send(JSON.stringify(data));
-});
+  // Listen for the first message from the client (expecting the document ID)
+  ws.on('message', (message) => {
+    try {
+      const { docId } = JSON.parse(message);
+
+      if (!docId) {
+        ws.send(JSON.stringify({ error: "Document ID is required" }));
+        return;
+      }
+
+      console.log(`Listening for changes on document: ${docId}`);
+
+      // Reference to the specific document
+      const docRef = db.collection('group').doc(docId);
+
+      // Set up Firestore listener for the specific document
+      unsubscribe = docRef.onSnapshot((doc) => {
+        if (doc.exists) {
+          ws.send(JSON.stringify({ [doc.id]: doc.data() }));
+        } else {
+          ws.send(JSON.stringify({ error: "Document not found" }));
+        }
+      });
+    } catch (error) {
+      console.error("Error parsing message:", error);
+      ws.send(JSON.stringify({ error: "Invalid message format" }));
+    }
+  });
 
   // Handle WebSocket close
   ws.on('close', () => {
-      console.log('Client disconnected');
-      unsubscribe();  // Stop listening to Firestore updates
+    console.log('Client disconnected');
+    if (unsubscribe) {
+      unsubscribe(); // Stop Firestore listener
+    }
   });
 });
 

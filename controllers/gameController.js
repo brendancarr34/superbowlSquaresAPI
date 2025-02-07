@@ -8,6 +8,7 @@ const router = express.Router();
 router.get('/:groupId', async (req, res) => {
     try {
         const groupId = req.params.groupId;
+        console.log(groupId);
 
         if (!groupId) {
             return res.status(400).json({ error: 'Group ID is required' });
@@ -25,6 +26,52 @@ router.get('/:groupId', async (req, res) => {
     } catch (error) {
         console.error('Error retrieving gameData for group: ' + groupId);
         res.status(500).json({ error: 'Internal server error' });
+    }
+})
+
+router.get('/auth-admin/:groupId/:userInputAdminPassword', async (req, res) => {
+    try {
+        const groupId = req.params.groupId;
+        const userInputAdminPassword = req.params.userInputAdminPassword;
+
+        console.log('groupId: ' + groupId);
+        console.log('userInputAdminPassword: ' + userInputAdminPassword);
+
+        if (!groupId) {
+            return res.status(400).json({ error: 'Group ID is required' });
+        }
+
+        if (!userInputAdminPassword) {
+            return res.status(400).json({ error: 'userInputAdminPassword is required' });
+        }
+
+        const documentRef = admin.firestore().collection('group').doc(groupId);
+
+        const doc = await documentRef.get();
+
+        if (!doc.exists) {
+            return res.status(404).json({ error: 'Document not found for groupId: ' + groupId });
+        }
+
+        const data = doc.data();
+        const adminPassword = data.adminPassword;
+
+        if (!adminPassword || adminPassword == '')
+        {
+            return res.json({auth: true});
+        }
+
+        if (userInputAdminPassword != adminPassword)
+        {
+            return res.status(400).json({ error: 'Incorrect admin password' });
+        }
+
+        return res.json({auth: true});
+    }
+    catch (error)
+    {
+        console.error('Error looking up document:', error);
+        return res.status(500).send('Error looking up document');
     }
 })
 
