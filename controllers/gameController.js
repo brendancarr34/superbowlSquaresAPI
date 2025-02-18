@@ -774,4 +774,61 @@ router.post('/api/ledger/:groupId', async (req, res) => {
     }
 });
 
+router.post('/duplicate', async (req, res) => {
+    try {
+        console.log('duplicate...');
+      const { collection, docId, newDocId } = req.body;
+  
+      if (!collection || !docId || !newDocId) {
+        return res.status(400).json({ error: "Collection, document ID, and new document ID are required" });
+      }
+  
+      // Reference the original document
+      const docRef = admin.firestore().collection(collection).doc(docId);
+      const docSnapshot = await docRef.get();
+  
+      if (!docSnapshot.exists) {
+        return res.status(404).json({ error: "Document not found" });
+      }
+  
+      // Get document data
+      const data = docSnapshot.data();
+  
+      // Create a new document with the specified ID
+      const newDocRef = admin.firestore().collection(collection).doc(newDocId);
+      await newDocRef.set(data);
+  
+      return res.json({ message: "Document duplicated", newDocId });
+    } catch (error) {
+      console.error("Error duplicating document:", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  router.post('/find-beta-password', async (req, res) => {
+    try {
+      const { collection, betaPassword } = req.body;
+  
+      if (!collection || !betaPassword) {
+        return res.status(400).json({ error: "Collection and betaPassword are required" });
+      }
+  
+      // Query Firestore for documents with matching `betaPassword`
+      const collectionRef = admin.firestore().collection(collection);
+      const querySnapshot = await collectionRef.where('betaPassword', '==', betaPassword).get();
+  
+      if (querySnapshot.empty) {
+        return res.status(404).json({ error: "No documents found with the provided betaPassword" });
+      }
+  
+        // Extract only document IDs
+        const docIds = querySnapshot.docs.map(doc => doc.id);
+  
+        return res.json({ count: docIds.length, docIds });
+    } catch (error) {
+      console.error("Error finding documents:", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
 module.exports = router;
