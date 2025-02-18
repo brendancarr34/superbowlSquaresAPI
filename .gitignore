@@ -64,3 +64,5 @@ node_modules/
 
 # dotenv environment variables file
 .env
+
+/superbowlsquares-db1-firebase-adminsdk-8sn7g-38bae2da58.json
